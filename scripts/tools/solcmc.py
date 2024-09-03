@@ -13,6 +13,7 @@ import logging
 import sys
 import re
 import os
+from time import time
 
 import utils
 from utils import (STRONG_POSITIVE,
@@ -32,7 +33,7 @@ TAG_NEGATE = '/// @custom:negate'
 
 COMMAND_TEMPLATE = Template(
         'timeout $timeout ' +
-        'solc $contract_path ' +
+        '/usr/bin/solc $contract_path ' +
         '--model-checker-engine chc ' +
         '--model-checker-timeout 0 ' +
         '--model-checker-targets assert ' +
@@ -106,8 +107,11 @@ def run(contract_path, timeout=DEFAULT_TIMEOUT, solver=DEFAULT_SOLVER):
     params['solver'] = solver
 
     command = COMMAND_TEMPLATE.substitute(params)
-    #print(command) # substitute with a log that does not go to stdout
+    print(command) # substitute with a log that does not go to stdout
+    start_time = time()
     log = subprocess.run(command.split(), capture_output=True, text=True)
+    print(command)
+    end_time = time()
 
     # Invalid time interval
     if 'invalid time' in log.stderr:
@@ -187,5 +191,5 @@ def run_all(contracts_paths, timeout=DEFAULT_TIMEOUT, logs_dir=None, solver=DEFA
         results = pool.starmap(run_log, inputs)
         for (id, outcome) in results:
             outcomes[id] = outcome
-
+    print(f'Outcomes: {outcomes}')
     return outcomes
