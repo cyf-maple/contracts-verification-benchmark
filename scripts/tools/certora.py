@@ -13,6 +13,8 @@ import logging
 import sys
 import os
 import re
+from time import time
+from memory_profiler import memory_usage
 
 import utils
 from utils import (STRONG_POSITIVE,
@@ -120,9 +122,18 @@ def run(contract_path, spec_path):
     params['msg'] = f'{name}_{property_id}_{version_id}'
 
     command = COMMAND_TEMPLATE.substitute(params)
-    # print(command) - substitute with a log that does not go to stdout
+    print(command) # substitute with a log that does not go to stdout
     try:
+        start_time = time()
+        mem_before = memory_usage()[0]
         log = subprocess.run(command.split(), capture_output=True, text=True)
+        mem_after = memory_usage()[0]
+        end_time = time()
+        filename = 'time.csv'
+        additional_content = contract_path + ',' + spec_path + ',' + str(end_time - start_time) + ',' + f"{mem_after - mem_before} MB"
+        # addtime
+        with open(filename, 'a', encoding='utf-8') as file:
+            file.write(additional_content + '\n')
     except FileNotFoundError as e:
         if 'certoraRun' in str(e):
             logging.error('Certora is not installed. Use:\npip install certora-cli.')

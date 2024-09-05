@@ -14,6 +14,7 @@ import sys
 import re
 import os
 from time import time
+from memory_profiler import memory_usage
 
 import utils
 from utils import (STRONG_POSITIVE,
@@ -109,9 +110,17 @@ def run(contract_path, timeout=DEFAULT_TIMEOUT, solver=DEFAULT_SOLVER):
     command = COMMAND_TEMPLATE.substitute(params)
     print(command) # substitute with a log that does not go to stdout
     start_time = time()
+    mem_before = memory_usage()[0]
     log = subprocess.run(command.split(), capture_output=True, text=True)
-    print(command)
+    mem_after = memory_usage()[0]
     end_time = time()
+    # time.csv
+    filename = 'time.csv'
+    additional_content = contract_path + ',' + str(end_time - start_time) + ',' + f"{mem_after - mem_before} MB"
+
+    # addtime
+    with open(filename, 'a', encoding='utf-8') as file:
+        file.write(additional_content + '\n')
 
     # Invalid time interval
     if 'invalid time' in log.stderr:
